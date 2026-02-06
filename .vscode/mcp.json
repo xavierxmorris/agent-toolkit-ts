@@ -1,0 +1,60 @@
+{
+  "servers": {
+    "github": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}"
+      }
+    },
+    "filesystem": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${workspaceFolder}"
+      ]
+    },
+    "memory": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-memory"]
+    },
+    "playwright": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@playwright/mcp@latest"]
+    },
+    "azure": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@azure/mcp@latest"],
+      "env": {
+        "AZURE_SUBSCRIPTION_ID": "${env:AZURE_SUBSCRIPTION_ID}",
+        "AZURE_TENANT_ID": "${env:AZURE_TENANT_ID}"
+      }
+    },
+    "mssql": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-mssql"],
+      "env": {
+        "MSSQL_CONNECTION_STRING": "${env:MSSQL_CONNECTION_STRING}"
+      }
+    },
+    "fabric": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@anthropic/mcp-server-fabric"],
+      "env": {
+        "FABRIC_WORKSPACE_ID": "${env:FABRIC_WORKSPACE_ID}",
+        "FABRIC_TENANT_ID": "${env:FABRIC_TENANT_ID}"
+      }
+    },
+    "foundry": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@palantir/mcp-server-foundry"],
+      "env": {
+        "FOUNDRY_TOKEN": "${env:FOUNDRY_TOKEN}",
+        "FOUNDRY_URL": "${env:FOUNDRY_URL}"
+      }
+    }
+  }
+}

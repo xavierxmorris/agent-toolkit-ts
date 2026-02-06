@@ -1,3 +1,5 @@
+import { ThemeProvider } from "@/components/blocks/theme/theme-provider";
+import { ToastProvider } from "@/components/ui/toast";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -5,8 +7,12 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Agent Toolkit TS",
-  description: "An opinionated starter template for building with GitHub Copilot",
+  title: {
+    default: "FinanceBank — Business Portal",
+    template: "%s | FinanceBank",
+  },
+  description:
+    "Secure banking portal for managing client accounts, transactions, and business operations.",
 };
 
 export default function RootLayout({
@@ -15,8 +21,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} antialiased`}>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

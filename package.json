@@ -1,0 +1,12 @@
+{
+  "name": "agent-toolkit-ts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --cwd web dev",
+    "build": "bun run --cwd web build",
+    "start": "bun run --cwd web start",
+    "lint": "bun run --cwd web lint",
+    "format": "bun run --cwd web format"
+  }
+}
