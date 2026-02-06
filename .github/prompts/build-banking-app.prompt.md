@@ -296,18 +296,35 @@ Same feature module pattern as customers:
 
 Follow the `zustand` skill in `.github/skills/zustand/`.
 
+### 10.0 — `web/store/create-selectors.ts` (Utility)
+- `createSelectors()` utility that wraps a base store to add `.use.field()` auto-generated hooks
+- `WithSelectors<S>` type for type safety
+- Every store must be wrapped with `createSelectors()` before export
+
 ### 10.1 — `web/store/use-customer-store.ts`
 - **Types**: `SortDirection = "asc" | "desc"`, `CustomerSortField = "name" | "email" | "company" | "status" | "createdAt"`
+- **`initialState` constant**: extracted and reused by `resetStore()`
+- **Base store**: `useCustomerStoreBase` — state only, wrapped with `subscribeWithSelector`
+- **Exported store**: `useCustomerStore = createSelectors(useCustomerStoreBase)` — has `.use.field()` hooks
 - **State**: `customers[]`, `selectedCustomer`, `isLoading`, `error`, `filter`, `page`, `pageSize`, `sortField` (default `"name"`), `sortDirection` (default `"asc"`)
-- **Decoupled actions pattern**: export standalone functions (`setCustomers`, `setSelectedCustomer`, `addCustomer`, `updateCustomer`, `removeCustomer`, `setFilter`, `setPage`, `setPageSize`, `setSort`, `setLoading`, `setError`) that call `useCustomerStore.setState()`
-- Use `subscribeWithSelector` middleware
-- Filtering / pagination is done inline in the page component, not via separate selector hooks
+- **Decoupled actions**: standalone functions calling `useCustomerStoreBase.setState()` — `setCustomers`, `setSelectedCustomer`, `addCustomer`, `updateCustomer`, `removeCustomer`, `setFilter`, `setPage`, `setPageSize`, `setSort`, `setLoading`, `setError`, `resetStore`
+- **Derived hooks**:
+  - `usePaginatedCustomers()` → `{ paginatedCustomers, totalFiltered, totalPages }` — filter → sort → paginate logic
+  - `useCustomerStats()` → `{ total, active, pending, inactive }`
 
 ### 10.2 — `web/store/use-order-store.ts`
-- Same decoupled-actions pattern as customer store
+- Same `createSelectors` + `initialState` + base/exported store pattern
 - **Types**: `OrderSortField = "customerName" | "total" | "status" | "createdAt"`
 - **State**: `orders[]`, `selectedOrder`, `isLoading`, `error`, `filter`, `customerIdFilter` (string | null), `page`, `pageSize`, `sortField` (default `"createdAt"`), `sortDirection` (default `"desc"`)
-- **Actions**: `setOrders`, `setSelectedOrder`, `addOrder`, `updateOrder`, `removeOrder`, `setFilter`, `setCustomerIdFilter`, `setPage`, `setPageSize`, `setSort`, `setLoading`, `setError`
+- **Actions**: `setOrders`, `setSelectedOrder`, `addOrder`, `updateOrder`, `removeOrder`, `setFilter`, `setCustomerIdFilter`, `setPage`, `setPageSize`, `setSort`, `setLoading`, `setError`, `resetStore`
+- **Derived hooks**:
+  - `usePaginatedOrders()` → `{ paginatedOrders, totalFiltered, totalPages }` — includes customerIdFilter
+  - `useOrderStats()` → `{ total, totalAmount, pending, completed }`
+
+### 10.3 — Store Usage in Pages
+- Components use `useStore.use.field()` auto-selectors (not inline `(s) => s.field`)
+- Pages import derived hooks (`usePaginatedCustomers()`, `useOrderStats()`) instead of inline `useMemo`
+- Actions are imported directly as standalone functions (not from hooks)
 
 ---
 

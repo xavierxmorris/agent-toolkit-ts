@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import { CustomerTable } from "./customer-table";
 import { CustomerForm } from "./customer-form";
 import {
   useCustomerStore,
+  usePaginatedCustomers,
+  useCustomerStats,
   setCustomers,
   setLoading,
   setFilter,
@@ -54,48 +56,18 @@ export function CustomerPage() {
     customerId: null,
   });
 
-  // Atomic selectors - only re-renders when specific state changes
-  const customers = useCustomerStore((s) => s.customers);
-  const isLoading = useCustomerStore((s) => s.isLoading);
-  const error = useCustomerStore((s) => s.error);
-  const filter = useCustomerStore((s) => s.filter);
-  const page = useCustomerStore((s) => s.page);
-  const pageSize = useCustomerStore((s) => s.pageSize);
-  const sortField = useCustomerStore((s) => s.sortField);
-  const sortDirection = useCustomerStore((s) => s.sortDirection);
+  // Auto-generated selectors
+  const isLoading = useCustomerStore.use.isLoading();
+  const error = useCustomerStore.use.error();
+  const filter = useCustomerStore.use.filter();
+  const page = useCustomerStore.use.page();
+  const pageSize = useCustomerStore.use.pageSize();
+  const sortField = useCustomerStore.use.sortField();
+  const sortDirection = useCustomerStore.use.sortDirection();
 
-  // Sort, filter, and paginate customers
-  const { paginatedCustomers, totalFiltered } = useMemo(() => {
-    // 1. Filter
-    let result = customers;
-    if (filter) {
-      const lowerFilter = filter.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.name.toLowerCase().includes(lowerFilter) ||
-          c.email.toLowerCase().includes(lowerFilter) ||
-          c.company.toLowerCase().includes(lowerFilter)
-      );
-    }
-
-    // 2. Sort
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField] ?? "";
-      const bVal = b[sortField] ?? "";
-      const comparison = aVal.localeCompare(bVal);
-      return sortDirection === "asc" ? comparison : -comparison;
-    });
-
-    const totalFiltered = result.length;
-
-    // 3. Paginate
-    const startIndex = (page - 1) * pageSize;
-    const paginatedCustomers = result.slice(startIndex, startIndex + pageSize);
-
-    return { paginatedCustomers, totalFiltered };
-  }, [customers, filter, sortField, sortDirection, page, pageSize]);
-
-  const totalPages = Math.ceil(totalFiltered / pageSize);
+  // Derived state hooks (filter → sort → paginate logic lives in store)
+  const { paginatedCustomers, totalFiltered, totalPages } = usePaginatedCustomers();
+  const stats = useCustomerStats();
 
   // Load customers on mount
   useEffect(() => {
@@ -210,24 +182,24 @@ export function CustomerPage() {
         <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
           <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
             <div className="text-sm text-muted-foreground">Total Clients</div>
-            <div className="mt-1 text-2xl font-bold text-foreground">{customers.length}</div>
+            <div className="mt-1 text-2xl font-bold text-foreground">{stats.total}</div>
           </div>
           <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
             <div className="text-sm text-muted-foreground">Active</div>
             <div className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
-              {customers.filter(c => c.status === "active").length}
+              {stats.active}
             </div>
           </div>
           <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
             <div className="text-sm text-muted-foreground">Pending Review</div>
             <div className="mt-1 text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-              {customers.filter(c => c.status === "pending").length}
+              {stats.pending}
             </div>
           </div>
           <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
             <div className="text-sm text-muted-foreground">Inactive</div>
             <div className="mt-1 text-2xl font-bold text-muted-foreground">
-              {customers.filter(c => c.status === "inactive").length}
+              {stats.inactive}
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import { OrderTable } from "./order-table";
 import { OrderForm } from "./order-form";
 import {
   useOrderStore,
+  usePaginatedOrders,
+  useOrderStats,
   setOrders,
   setLoading,
   setFilter,
@@ -66,65 +68,24 @@ export function OrderPage() {
     orderId: null,
   });
 
-  // Atomic selectors
-  const orders = useOrderStore((s) => s.orders);
-  const isLoading = useOrderStore((s) => s.isLoading);
-  const error = useOrderStore((s) => s.error);
-  const filter = useOrderStore((s) => s.filter);
-  const customerIdFilter = useOrderStore((s) => s.customerIdFilter);
-  const page = useOrderStore((s) => s.page);
-  const pageSize = useOrderStore((s) => s.pageSize);
-  const sortField = useOrderStore((s) => s.sortField);
-  const sortDirection = useOrderStore((s) => s.sortDirection);
+  // Auto-generated selectors
+  const isLoading = useOrderStore.use.isLoading();
+  const error = useOrderStore.use.error();
+  const filter = useOrderStore.use.filter();
+  const customerIdFilter = useOrderStore.use.customerIdFilter();
+  const page = useOrderStore.use.page();
+  const pageSize = useOrderStore.use.pageSize();
+  const sortField = useOrderStore.use.sortField();
+  const sortDirection = useOrderStore.use.sortDirection();
 
   // Set customer filter from URL param
   useEffect(() => {
     setCustomerIdFilter(customerIdParam);
   }, [customerIdParam]);
 
-  // Sort, filter, and paginate orders
-  const { paginatedOrders, totalFiltered } = useMemo(() => {
-    let result = orders;
-
-    // Filter by customer if set
-    if (customerIdFilter) {
-      result = result.filter((o) => o.customerId === customerIdFilter);
-    }
-
-    // Filter by search
-    if (filter) {
-      const lowerFilter = filter.toLowerCase();
-      result = result.filter(
-        (o) =>
-          o.customerName.toLowerCase().includes(lowerFilter) ||
-          o.id.toLowerCase().includes(lowerFilter) ||
-          o.status.toLowerCase().includes(lowerFilter)
-      );
-    }
-
-    // Sort
-    result = [...result].sort((a, b) => {
-      let comparison = 0;
-      if (sortField === "total") {
-        comparison = a.total - b.total;
-      } else if (sortField === "createdAt") {
-        comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      } else {
-        const aVal = a[sortField] ?? "";
-        const bVal = b[sortField] ?? "";
-        comparison = aVal.localeCompare(bVal);
-      }
-      return sortDirection === "asc" ? comparison : -comparison;
-    });
-
-    const totalFiltered = result.length;
-    const startIndex = (page - 1) * pageSize;
-    const paginatedOrders = result.slice(startIndex, startIndex + pageSize);
-
-    return { paginatedOrders, totalFiltered };
-  }, [orders, customerIdFilter, filter, sortField, sortDirection, page, pageSize]);
-
-  const totalPages = Math.ceil(totalFiltered / pageSize);
+  // Derived state hooks (filter → sort → paginate logic lives in store)
+  const { paginatedOrders, totalFiltered, totalPages } = usePaginatedOrders();
+  const stats = useOrderStats();
   const customerName = customerIdFilter 
     ? MOCK_CUSTOMERS.find((c) => c.id === customerIdFilter)?.name 
     : null;
@@ -220,11 +181,6 @@ export function OrderPage() {
     }
   };
 
-  // Calculate stats
-  const totalAmount = orders.reduce((sum, o) => sum + o.total, 0);
-  const pendingOrders = orders.filter(o => o.status === "pending" || o.status === "processing");
-  const completedOrders = orders.filter(o => o.status === "delivered");
-
   return (
     <div className="min-h-screen bg-background py-8">
       <div className="mx-auto max-w-7xl px-6">
@@ -256,24 +212,24 @@ export function OrderPage() {
         <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
           <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
             <div className="text-sm text-muted-foreground">Total Transactions</div>
-            <div className="mt-1 text-2xl font-bold text-foreground">{orders.length}</div>
+            <div className="mt-1 text-2xl font-bold text-foreground">{stats.total}</div>
           </div>
           <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
             <div className="text-sm text-muted-foreground">Total Volume</div>
             <div className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
-              ${totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              ${stats.totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </div>
           </div>
           <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
             <div className="text-sm text-muted-foreground">Pending/Processing</div>
             <div className="mt-1 text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-              {pendingOrders.length}
+              {stats.pending}
             </div>
           </div>
           <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
             <div className="text-sm text-muted-foreground">Completed</div>
             <div className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
-              {completedOrders.length}
+              {stats.completed}
             </div>
           </div>
         </div>
