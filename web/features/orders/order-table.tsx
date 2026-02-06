@@ -83,7 +83,7 @@ export function OrderTable({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" role="region" aria-label="Transactions table">
       <table className="w-full text-left text-sm">
         <thead className="border-b border-border bg-muted">
           <tr>
@@ -96,6 +96,10 @@ export function OrderTable({
                 onSort && "cursor-pointer select-none hover:text-foreground"
               )}
               onClick={() => onSort?.("customerName")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSort?.("customerName"); } }}
+              tabIndex={onSort ? 0 : undefined}
+              role={onSort ? "button" : undefined}
+              aria-sort={sortField === "customerName" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
             >
               Client
               {onSort && <SortIcon field="customerName" currentField={sortField} direction={sortDirection} />}
@@ -109,6 +113,10 @@ export function OrderTable({
                 onSort && "cursor-pointer select-none hover:text-foreground"
               )}
               onClick={() => onSort?.("total")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSort?.("total"); } }}
+              tabIndex={onSort ? 0 : undefined}
+              role={onSort ? "button" : undefined}
+              aria-sort={sortField === "total" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
             >
               Amount
               {onSort && <SortIcon field="total" currentField={sortField} direction={sortDirection} />}
@@ -119,6 +127,10 @@ export function OrderTable({
                 onSort && "cursor-pointer select-none hover:text-foreground"
               )}
               onClick={() => onSort?.("status")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSort?.("status"); } }}
+              tabIndex={onSort ? 0 : undefined}
+              role={onSort ? "button" : undefined}
+              aria-sort={sortField === "status" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
             >
               Status
               {onSort && <SortIcon field="status" currentField={sortField} direction={sortDirection} />}
@@ -129,6 +141,10 @@ export function OrderTable({
                 onSort && "cursor-pointer select-none hover:text-foreground"
               )}
               onClick={() => onSort?.("createdAt")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSort?.("createdAt"); } }}
+              tabIndex={onSort ? 0 : undefined}
+              role={onSort ? "button" : undefined}
+              aria-sort={sortField === "createdAt" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
             >
               Date
               {onSort && <SortIcon field="createdAt" currentField={sortField} direction={sortDirection} />}

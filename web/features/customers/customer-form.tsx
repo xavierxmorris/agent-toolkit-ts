@@ -37,16 +37,20 @@ export function CustomerForm({
 
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
+    } else if (formData.name.trim().length > 100) {
+      newErrors.name = "Name must be 100 characters or less";
     }
 
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
       newErrors.email = "Invalid email format";
     }
 
     if (!formData.company.trim()) {
       newErrors.company = "Company is required";
+    } else if (formData.company.trim().length > 100) {
+      newErrors.company = "Company must be 100 characters or less";
     }
 
     setErrors(newErrors);
@@ -80,6 +84,8 @@ export function CustomerForm({
           placeholder="John Smith"
           value={formData.name}
           onChange={(e) => handleChange("name", e.target.value)}
+          maxLength={100}
+          aria-invalid={!!errors.name}
           className={errors.name ? "border-destructive" : ""}
         />
         {errors.name && (
@@ -98,6 +104,8 @@ export function CustomerForm({
           placeholder="john@example.com"
           value={formData.email}
           onChange={(e) => handleChange("email", e.target.value)}
+          maxLength={254}
+          aria-invalid={!!errors.email}
           className={errors.email ? "border-destructive" : ""}
         />
         {errors.email && (
@@ -115,6 +123,8 @@ export function CustomerForm({
           placeholder="Acme Corp"
           value={formData.company}
           onChange={(e) => handleChange("company", e.target.value)}
+          maxLength={100}
+          aria-invalid={!!errors.company}
           className={errors.company ? "border-destructive" : ""}
         />
         {errors.company && (

@@ -16,7 +16,7 @@ export default async function AuthenticatedLayout({
   }
 
   return (
-    <SessionProvider session={session}>
+    <SessionProvider session={session} refetchInterval={5 * 60} refetchOnWindowFocus={true}>
         <div className="min-h-screen bg-background">
         {/* Skip to content — accessibility */}
         <a
@@ -48,9 +48,10 @@ export default async function AuthenticatedLayout({
             </div>
             <div className="flex items-center gap-4">
               {/* Notifications */}
-              <button className="relative rounded-lg p-2 hover:bg-muted" aria-label="Notifications">
+              <button className="relative rounded-lg p-2 hover:bg-muted" aria-label="Notifications — unread">
                 <span className="text-xl" aria-hidden="true">🔔</span>
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-destructive" />
+                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-destructive" aria-hidden="true" />
+                <span className="sr-only">You have unread notifications</span>
               </button>
               {/* Help */}
               <button className="rounded-lg p-2 hover:bg-muted" aria-label="Help">

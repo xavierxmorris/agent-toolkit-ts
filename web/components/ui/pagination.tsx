@@ -74,25 +74,28 @@ export function Pagination({
       </div>
 
       {/* Page navigation */}
-      <div className="flex items-center gap-1">
+      <nav className="flex items-center gap-1" aria-label="Pagination">
         <Button
           variant="outline"
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
+          aria-label="Go to previous page"
         >
           Previous
         </Button>
 
         {getPageNumbers().map((page, index) =>
           page === "..." ? (
-            <span key={`ellipsis-${index}`} className="px-2 text-muted-foreground">
+            <span key={`ellipsis-${index}`} className="px-2 text-muted-foreground" aria-hidden="true">
               ...
             </span>
           ) : (
             <button
               key={page}
               onClick={() => onPageChange(page)}
+              aria-label={`Page ${page}`}
+              aria-current={currentPage === page ? "page" : undefined}
               className={cn(
                 "flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium transition-colors",
                 currentPage === page
@@ -110,10 +113,11 @@ export function Pagination({
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
+          aria-label="Go to next page"
         >
           Next
         </Button>
-      </div>
+      </nav>
     </div>
   );
 }

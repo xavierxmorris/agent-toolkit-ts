@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/components/lib/utils";
 
 interface MobileNavProps {
@@ -13,9 +14,19 @@ interface MobileNavProps {
   }>;
 }
 
+const adminItems = [
+  { href: "/admin/users", label: "User Management", icon: "🔐" },
+  { href: "/admin/audit", label: "Audit Log", icon: "📋" },
+];
+
 export function MobileNav({ items }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const toggleButtonRef = useRef<HTMLButtonElement>(null);
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
 
   // Close on route change
   useEffect(() => {
@@ -35,21 +46,49 @@ export function MobileNav({ items }: MobileNavProps) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      // Focus the close button when drawer opens
+      closeButtonRef.current?.focus();
     } else {
       document.body.style.overflow = "";
+      // Return focus to toggle button when drawer closes
+      toggleButtonRef.current?.focus();
     }
     return () => {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
 
+  // Focus trap inside the drawer
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key !== "Tab" || !drawerRef.current) return;
+
+    const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }, []);
+
   return (
     <>
       {/* Hamburger Button */}
       <button
+        ref={toggleButtonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted lg:hidden"
-        aria-label="Toggle navigation"
+        aria-label={isOpen ? "Close navigation" : "Open navigation"}
+        aria-expanded={isOpen}
+        aria-controls="mobile-nav-drawer"
       >
         <svg
           className="h-6 w-6"
@@ -85,6 +124,12 @@ export function MobileNav({ items }: MobileNavProps) {
 
       {/* Drawer */}
       <div
+        ref={drawerRef}
+        id="mobile-nav-drawer"
+        role="dialog"
+        aria-modal={isOpen ? "true" : undefined}
+        aria-label="Navigation menu"
+        onKeyDown={isOpen ? handleKeyDown : undefined}
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-72 transform bg-card shadow-xl transition-transform duration-300 ease-in-out lg:hidden",
           isOpen ? "translate-x-0" : "-translate-x-full"
@@ -102,6 +147,7 @@ export function MobileNav({ items }: MobileNavProps) {
             </div>
           </div>
           <button
+            ref={closeButtonRef}
             onClick={() => setIsOpen(false)}
             className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
             aria-label="Close navigation"
@@ -129,6 +175,32 @@ export function MobileNav({ items }: MobileNavProps) {
               </Link>
             ))}
           </div>
+
+          {/* Admin Section */}
+          {isAdmin && (
+            <div className="mt-6">
+              <div className="mb-2 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Administration
+              </div>
+              <div className="space-y-1">
+                {adminItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
+                      pathname.startsWith(item.href)
+                        ? "bg-destructive/10 text-destructive"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </nav>
 
         {/* Footer */}

@@ -5,12 +5,15 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { createSelectors } from "@/store/create-selectors";
 import type { Order } from "@/features/orders/types";
+import type { SortDirection } from "@/types/shared";
+
+// Re-export for consumers
+export type { SortDirection };
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type SortDirection = "asc" | "desc";
 export type OrderSortField = "customerName" | "total" | "status" | "createdAt";
 
 interface OrderState {
@@ -80,11 +83,18 @@ export const updateOrder = (id: string, updates: Partial<Order>) => {
 };
 
 export const removeOrder = (id: string) => {
-  useOrderStoreBase.setState((state) => ({
-    orders: state.orders.filter((o) => o.id !== id),
-    selectedOrder:
-      state.selectedOrder?.id === id ? null : state.selectedOrder,
-  }));
+  useOrderStoreBase.setState((state) => {
+    const orders = state.orders.filter((o) => o.id !== id);
+    // Clamp page if current page would be empty after deletion
+    const totalFiltered = orders.length;
+    const maxPage = Math.max(1, Math.ceil(totalFiltered / state.pageSize));
+    return {
+      orders,
+      page: state.page > maxPage ? maxPage : state.page,
+      selectedOrder:
+        state.selectedOrder?.id === id ? null : state.selectedOrder,
+    };
+  });
 };
 
 export const setLoading = (isLoading: boolean) => {

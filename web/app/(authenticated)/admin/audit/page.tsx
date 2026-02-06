@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/toast";
 
 const mockAuditLogs = [
   { id: 1, user: "Admin User", action: "User Created", target: "jane@company.com", timestamp: "Feb 5, 2026 10:30 AM", ip: "192.168.1.1", status: "success" },
@@ -83,7 +84,7 @@ export default function AuditLogPage() {
           <h1 className="text-2xl font-bold text-foreground">Audit Log</h1>
           <p className="mt-1 text-muted-foreground">Track all system activities and user actions</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/80">
+        <Button onClick={() => toast.info("Log export is coming soon")} className="bg-primary hover:bg-primary/80">
           📥 Export Logs
         </Button>
       </div>

@@ -2,6 +2,36 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 
+// ============================================================================
+// In-memory rate limiter (per-email, 5 attempts / 15-min window)
+// ============================================================================
+
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+const loginAttempts = new Map<string, { count: number; firstAttempt: number }>();
+
+function isRateLimited(email: string): boolean {
+  const now = Date.now();
+  const record = loginAttempts.get(email);
+
+  if (!record || now - record.firstAttempt > RATE_LIMIT_WINDOW_MS) {
+    // Window expired — reset
+    loginAttempts.set(email, { count: 1, firstAttempt: now });
+    return false;
+  }
+
+  record.count += 1;
+  if (record.count > RATE_LIMIT_MAX) {
+    return true; // blocked
+  }
+  return false;
+}
+
+function clearRateLimit(email: string): void {
+  loginAttempts.delete(email);
+}
+
 // Build providers list based on available configuration
 const providers = [];
 
@@ -29,6 +59,11 @@ providers.push(
       const password = credentials?.password?.toString();
 
       if (!email || !password) return null;
+
+      // Rate-limit check
+      if (isRateLimited(email)) {
+        throw new Error("Too many login attempts. Please try again later.");
+      }
 
       // Test accounts — only available in development
       if (process.env.NODE_ENV === "development") {
@@ -61,6 +96,7 @@ providers.push(
         );
 
         if (user) {
+          clearRateLimit(email);
           return {
             id: user.id,
             name: user.name,
@@ -104,12 +140,16 @@ export const {
     session: async ({ session, token }) => {
       if (token && session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role;
+        const role = token.role as string;
+        session.user.role = ["admin", "manager", "user"].includes(role)
+          ? role
+          : "user";
       }
       return session;
     },
   },
   session: {
     strategy: "jwt",
+    maxAge: 60 * 60, // 1 hour — sessions expire after 1 hour of inactivity
   },
 });

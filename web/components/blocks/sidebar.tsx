@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/components/lib/utils";
 import { roleBadge, formatRole } from "@/components/lib/role-utils";
+import { resetStore as resetCustomerStore } from "@/store/use-customer-store";
+import { resetStore as resetOrderStore } from "@/store/use-order-store";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "🏠" },
@@ -104,7 +106,11 @@ export function Sidebar() {
           </div>
         </div>
         <button
-          onClick={() => signOut({ callbackUrl: "/" })}
+          onClick={() => {
+            resetCustomerStore();
+            resetOrderStore();
+            signOut({ callbackUrl: "/" });
+          }}
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
         >
           <span>🚪</span>

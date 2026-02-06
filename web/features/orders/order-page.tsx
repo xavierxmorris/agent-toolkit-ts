@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,13 +90,27 @@ export function OrderPage() {
     ? MOCK_CUSTOMERS.find((c) => c.id === customerIdFilter)?.name 
     : null;
 
+  // Debounced search
+  const [localSearch, setLocalSearch] = useState(filter);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const handleSearchChange = useCallback((value: string) => {
+    setLocalSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setFilter(value), 300);
+  }, []);
+
   // Load orders on mount
   useEffect(() => {
     const loadOrders = async () => {
       setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setOrders(MOCK_ORDERS);
-      setLoading(false);
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        setOrders(MOCK_ORDERS);
+        setLoading(false);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to load transactions");
+        setLoading(false);
+      }
     };
     loadOrders();
   }, []);
@@ -160,10 +174,10 @@ export function OrderPage() {
       } else if ("customerId" in data) {
         const customer = MOCK_CUSTOMERS.find((c) => c.id === data.customerId);
         const newOrder: Order = {
-          id: `ord-${Date.now()}`,
+          id: `ord-${crypto.randomUUID().slice(0, 8)}`,
           customerId: data.customerId,
           customerName: customer?.name ?? "Unknown",
-          items: data.items.map((item, i) => ({ ...item, id: `i-${Date.now()}-${i}` })),
+          items: data.items.map((item, i) => ({ ...item, id: `i-${crypto.randomUUID().slice(0, 8)}-${i}` })),
           total: data.items.reduce((sum, item) => sum + item.quantity * item.price, 0),
           status: "pending",
           createdAt: new Date().toISOString().split("T")[0],
@@ -245,9 +259,10 @@ export function OrderPage() {
                 </span>
                 <Input
                   placeholder="Search by ID, client, or status..."
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
+                  value={localSearch}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="w-80 pl-10"
+                  maxLength={100}
                 />
               </div>
             </div>

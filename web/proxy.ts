@@ -1,22 +1,30 @@
 import { auth } from "@/auth";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Next.js 16+ proxy function (replaces middleware)
+// Public routes that do NOT require authentication
+const PUBLIC_PREFIXES = ["/auth/", "/api/"];
+const PUBLIC_EXACT = ["/", "/favicon.ico"];
+
+function isPublicRoute(pathname: string): boolean {
+  if (PUBLIC_EXACT.includes(pathname)) return true;
+  return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+// Next.js 16+ proxy function (replaces middleware) — deny-by-default
 export async function proxy(request: NextRequest) {
-  const session = await auth();
+  const { pathname } = request.nextUrl;
 
-  const isAuthPage = request.nextUrl.pathname.startsWith("/auth/");
-  const isApiRoute = request.nextUrl.pathname.startsWith("/api/");
-
-  // Allow auth pages and API routes through
-  if (isAuthPage || isApiRoute) {
+  // Allow public routes through without auth check
+  if (isPublicRoute(pathname)) {
     return NextResponse.next();
   }
 
-  // Redirect unauthenticated users to sign-in
+  // All other routes require authentication
+  const session = await auth();
+
   if (!session) {
     const signInUrl = new URL("/auth/signin", request.url);
-    signInUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
+    signInUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signInUrl);
   }
 
@@ -24,13 +32,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Protect all authenticated routes
-  matcher: [
-    "/dashboard/:path*",
-    "/customers/:path*",
-    "/orders/:path*",
-    "/reports/:path*",
-    "/settings/:path*",
-    "/admin/:path*",
-  ],
+  // Deny-by-default: match everything except static assets
+  matcher: ["/((?!_next/static|_next/image|favicon\\.ico).*)"],
 };

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
 
 const reportTypes = [
   { id: "transactions", name: "Transaction Report", description: "Detailed breakdown of all transactions", icon: "💳" },
@@ -33,7 +34,7 @@ export default function ReportsPage() {
           <p className="mt-1 text-muted-foreground">Generate and download business reports</p>
         </div>
         {canExport && (
-          <Button className="bg-primary hover:bg-primary/80">
+          <Button onClick={() => toast.info("Report scheduling is coming soon")} className="bg-primary hover:bg-primary/80">
             📊 Schedule Report
           </Button>
         )}
@@ -61,7 +62,7 @@ export default function ReportsPage() {
         </div>
         {selectedReport && (
           <div className="mt-4 flex gap-3">
-            <Button className="bg-primary hover:bg-primary/80">Generate Report</Button>
+            <Button onClick={() => toast.info("Report generation is coming soon")} className="bg-primary hover:bg-primary/80">Generate Report</Button>
             <Button variant="outline" onClick={() => setSelectedReport(null)}>Cancel</Button>
           </div>
         )}
@@ -95,8 +96,8 @@ export default function ReportsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">View</Button>
-                        {canExport && <Button variant="outline" size="sm">Download</Button>}
+                        <Button variant="outline" size="sm" onClick={() => toast.info("Report viewer is coming soon")}>View</Button>
+                        {canExport && <Button variant="outline" size="sm" onClick={() => toast.info("Report download is coming soon")}>Download</Button>}
                       </div>
                     </td>
                   </tr>

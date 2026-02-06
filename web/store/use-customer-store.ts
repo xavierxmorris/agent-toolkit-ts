@@ -5,12 +5,15 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { createSelectors } from "@/store/create-selectors";
 import type { Customer } from "@/features/customers/types";
+import type { SortDirection } from "@/types/shared";
+
+// Re-export for consumers
+export type { SortDirection };
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type SortDirection = "asc" | "desc";
 export type CustomerSortField = "name" | "email" | "company" | "status" | "createdAt";
 
 interface CustomerState {
@@ -78,11 +81,18 @@ export const updateCustomer = (id: string, updates: Partial<Customer>) => {
 };
 
 export const removeCustomer = (id: string) => {
-  useCustomerStoreBase.setState((state) => ({
-    customers: state.customers.filter((c) => c.id !== id),
-    selectedCustomer:
-      state.selectedCustomer?.id === id ? null : state.selectedCustomer,
-  }));
+  useCustomerStoreBase.setState((state) => {
+    const customers = state.customers.filter((c) => c.id !== id);
+    // Clamp page if current page would be empty after deletion
+    const totalFiltered = customers.length; // simplified; real clamp uses filtered count
+    const maxPage = Math.max(1, Math.ceil(totalFiltered / state.pageSize));
+    return {
+      customers,
+      page: state.page > maxPage ? maxPage : state.page,
+      selectedCustomer:
+        state.selectedCustomer?.id === id ? null : state.selectedCustomer,
+    };
+  });
 };
 
 export const setLoading = (isLoading: boolean) => {

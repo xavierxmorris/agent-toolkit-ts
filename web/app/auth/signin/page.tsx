@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signInAction } from "./actions";
 
-// Test accounts for quick login
+// Test accounts for quick login — only visible when NEXT_PUBLIC_SHOW_TEST_ACCOUNTS=true
 const TEST_ACCOUNTS = [
   { email: "admin@securebank.com", password: "admin123", role: "Admin", color: "bg-destructive" },
   { email: "manager@securebank.com", password: "manager123", role: "Manager", color: "bg-yellow-500" },
   { email: "user@securebank.com", password: "user123", role: "User", color: "bg-green-600" },
 ];
+
+const SHOW_TEST_ACCOUNTS = process.env.NEXT_PUBLIC_SHOW_TEST_ACCOUNTS === "true";
 
 function SignInContent() {
   const searchParams = useSearchParams();
@@ -140,9 +142,9 @@ function SignInContent() {
                   <input type="checkbox" className="rounded border-border" />
                   Remember this device
                 </label>
-                <a href="#" className="text-primary hover:underline">
+                <button type="button" className="text-primary hover:underline cursor-not-allowed opacity-60" disabled aria-disabled="true">
                   Forgot password?
-                </a>
+                </button>
               </div>
               <Button 
                 type="submit" 
@@ -167,10 +169,11 @@ function SignInContent() {
 
           {/* Help Section */}
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            Need help? <a href="#" className="text-primary hover:underline">Contact Support</a>
+            Need help? <button type="button" className="text-primary hover:underline cursor-not-allowed opacity-60" disabled aria-disabled="true">Contact Support</button>
           </div>
 
           {/* Test Accounts Section - Development Only */}
+          {SHOW_TEST_ACCOUNTS && (
           <div className="mt-6 rounded-xl border border-dashed border-border bg-muted p-4">
             <div className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
               <span>🧪</span>
@@ -211,6 +214,7 @@ function SignInContent() {
               Click any account above to login instantly
             </p>
           </div>
+          )}
         </div>
       </div>
     </div>

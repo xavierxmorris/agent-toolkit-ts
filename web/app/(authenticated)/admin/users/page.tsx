@@ -103,7 +103,7 @@ export default function AdminUsersPage() {
           <h1 className="text-2xl font-bold text-foreground">User Management</h1>
           <p className="mt-1 text-muted-foreground">Manage user accounts and permissions</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/80">
+        <Button onClick={() => toast.info("User creation is coming soon")} className="bg-primary hover:bg-primary/80">
           ➕ Add New User
         </Button>
       </div>
@@ -193,7 +193,7 @@ export default function AdminUsersPage() {
                   <td className="px-6 py-4 text-muted-foreground">{user.lastLogin}</td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">Edit</Button>
+                      <Button variant="outline" size="sm" onClick={() => toast.info(`Edit user: ${user.name}`)}>Edit</Button>
                       <Button
                         variant="outline"
                         size="sm"

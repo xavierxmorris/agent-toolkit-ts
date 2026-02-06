@@ -47,12 +47,18 @@ export function OrderForm({
       items.forEach((item, index) => {
         if (!item.name.trim()) {
           newErrors[`item-${index}-name`] = "Item name is required";
+        } else if (item.name.trim().length > 100) {
+          newErrors[`item-${index}-name`] = "Item name must be 100 characters or less";
         }
         if (item.quantity < 1) {
           newErrors[`item-${index}-quantity`] = "Quantity must be at least 1";
+        } else if (item.quantity > 10000) {
+          newErrors[`item-${index}-quantity`] = "Quantity must be 10,000 or less";
         }
         if (item.price <= 0) {
           newErrors[`item-${index}-price`] = "Price must be greater than 0";
+        } else if (item.price > 999999.99) {
+          newErrors[`item-${index}-price`] = "Price must be $999,999.99 or less";
         }
       });
     }
@@ -161,6 +167,7 @@ export function OrderForm({
                 placeholder="Item name"
                 value={item.name}
                 onChange={(e) => updateItem(index, "name", e.target.value)}
+                maxLength={100}
                 className={errors[`item-${index}-name`] ? "border-destructive" : ""}
               />
             </div>
@@ -169,6 +176,7 @@ export function OrderForm({
                 type="number"
                 placeholder="Qty"
                 min={1}
+                max={10000}
                 value={item.quantity}
                 onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)}
               />
@@ -179,6 +187,7 @@ export function OrderForm({
                 placeholder="Price"
                 step="0.01"
                 min={0}
+                max={999999.99}
                 value={item.price}
                 onChange={(e) => updateItem(index, "price", parseFloat(e.target.value) || 0)}
               />

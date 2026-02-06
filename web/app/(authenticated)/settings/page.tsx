@@ -10,6 +10,15 @@ export default function SettingsPage() {
   const { data: session } = useSession();
   const userRole = session?.user?.role ?? "user";
   const [activeTab, setActiveTab] = useState("profile");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Controlled notification toggles
+  const [notifications, setNotifications] = useState({
+    transactionAlerts: true,
+    securityAlerts: true,
+    marketingUpdates: false,
+    weeklySummary: true,
+  });
 
   const tabs = [
     { id: "profile", label: "Profile", icon: "👤" },
@@ -18,7 +27,11 @@ export default function SettingsPage() {
     { id: "preferences", label: "Preferences", icon: "⚙️" },
   ];
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setIsSaving(true);
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    setIsSaving(false);
     toast.success("Settings saved successfully");
   };
 
@@ -89,8 +102,8 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <Button onClick={handleSave} className="bg-primary hover:bg-primary/80">
-                  Save Changes
+                <Button onClick={handleSave} disabled={isSaving} className="bg-primary hover:bg-primary/80">
+                  {isSaving ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             )}
@@ -106,7 +119,7 @@ export default function SettingsPage() {
                       <h3 className="font-medium text-foreground">Password</h3>
                       <p className="text-sm text-muted-foreground">Last changed 30 days ago</p>
                     </div>
-                    <Button variant="outline">Change Password</Button>
+                    <Button variant="outline" onClick={() => toast.info("Password change is coming soon")}>Change Password</Button>
                   </div>
                 </div>
 
@@ -117,7 +130,7 @@ export default function SettingsPage() {
                       <h3 className="font-medium text-foreground">Two-Factor Authentication</h3>
                       <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
                     </div>
-                    <Button className="bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800">Enable 2FA</Button>
+                    <Button onClick={() => toast.info("Two-factor authentication is coming soon")} className="bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800">Enable 2FA</Button>
                   </div>
                 </div>
 
@@ -128,7 +141,7 @@ export default function SettingsPage() {
                       <h3 className="font-medium text-foreground">Active Sessions</h3>
                       <p className="text-sm text-muted-foreground">Manage your active sessions</p>
                     </div>
-                    <Button variant="outline">View Sessions</Button>
+                    <Button variant="outline" onClick={() => toast.info("Session management is coming soon")}>View Sessions</Button>
                   </div>
                 </div>
               </div>
@@ -138,13 +151,13 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 <h2 className="text-lg font-semibold text-foreground">Notification Preferences</h2>
                 
-                {[
-                  { label: "Transaction Alerts", description: "Get notified for all transactions", default: true },
-                  { label: "Security Alerts", description: "Receive alerts for suspicious activity", default: true },
-                  { label: "Marketing Updates", description: "News and product updates", default: false },
-                  { label: "Weekly Summary", description: "Weekly account summary email", default: true },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between rounded-lg border border-border p-4">
+                {([
+                  { key: "transactionAlerts" as const, label: "Transaction Alerts", description: "Get notified for all transactions" },
+                  { key: "securityAlerts" as const, label: "Security Alerts", description: "Receive alerts for suspicious activity" },
+                  { key: "marketingUpdates" as const, label: "Marketing Updates", description: "News and product updates" },
+                  { key: "weeklySummary" as const, label: "Weekly Summary", description: "Weekly account summary email" },
+                ]).map((item) => (
+                  <div key={item.key} className="flex items-center justify-between rounded-lg border border-border p-4">
                     <div>
                       <h3 className="font-medium text-foreground">{item.label}</h3>
                       <p className="text-sm text-muted-foreground">{item.description}</p>
@@ -152,22 +165,29 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       role="switch"
-                      aria-checked={item.default}
+                      aria-checked={notifications[item.key]}
                       aria-label={item.label}
-                      className="peer relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full bg-muted transition-colors aria-checked:bg-primary"
-                      onClick={(e) => {
-                        const btn = e.currentTarget;
-                        const checked = btn.getAttribute("aria-checked") === "true";
-                        btn.setAttribute("aria-checked", String(!checked));
-                      }}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${
+                        notifications[item.key] ? "bg-primary" : "bg-muted"
+                      }`}
+                      onClick={() =>
+                        setNotifications((prev) => ({
+                          ...prev,
+                          [item.key]: !prev[item.key],
+                        }))
+                      }
                     >
-                      <span className="pointer-events-none block h-5 w-5 translate-x-[2px] rounded-full bg-white shadow-sm transition-transform [[aria-checked=true]>&]:translate-x-[22px]" />
+                      <span
+                        className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                          notifications[item.key] ? "translate-x-[22px]" : "translate-x-[2px]"
+                        }`}
+                      />
                     </button>
                   </div>
                 ))}
 
-                <Button onClick={handleSave} className="bg-primary hover:bg-primary/80">
-                  Save Preferences
+                <Button onClick={handleSave} disabled={isSaving} className="bg-primary hover:bg-primary/80">
+                  {isSaving ? "Saving..." : "Save Preferences"}
                 </Button>
               </div>
             )}
@@ -211,8 +231,8 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <Button onClick={handleSave} className="bg-primary hover:bg-primary/80">
-                  Save Preferences
+                <Button onClick={handleSave} disabled={isSaving} className="bg-primary hover:bg-primary/80">
+                  {isSaving ? "Saving..." : "Save Preferences"}
                 </Button>
               </div>
             )}

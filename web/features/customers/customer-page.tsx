@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +68,15 @@ export function CustomerPage() {
   // Derived state hooks (filter → sort → paginate logic lives in store)
   const { paginatedCustomers, totalFiltered, totalPages } = usePaginatedCustomers();
   const stats = useCustomerStats();
+
+  // Debounced search
+  const [localSearch, setLocalSearch] = useState(filter);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const handleSearchChange = useCallback((value: string) => {
+    setLocalSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setFilter(value), 300);
+  }, []);
 
   // Load customers on mount
   useEffect(() => {
@@ -139,7 +148,7 @@ export function CustomerPage() {
       } else {
         // Create new customer
         const newCustomer: Customer = {
-          id: String(Date.now()),
+          id: crypto.randomUUID(),
           ...data,
           status: "pending",
           createdAt: new Date().toISOString().split("T")[0],
@@ -215,9 +224,10 @@ export function CustomerPage() {
                 </span>
                 <Input
                   placeholder="Search by name, email, or company..."
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
+                  value={localSearch}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="w-80 pl-10"
+                  maxLength={100}
                 />
               </div>
             </div>
